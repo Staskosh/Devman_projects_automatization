@@ -6,12 +6,12 @@ from django.contrib import admin
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'external_id', 'name', 'tg_chat_id', 'start_time_call', 'end_time_call', 'is_far_east')
+    list_display = ('id', 'name', 'tg_chat_id', 'start_time_call', 'end_time_call', 'is_far_east')
 
 
 @admin.register(Project_manager)
 class Project_managerAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'tg_chat_id', 'available_time')
+    list_display = ('name', 'tg_chat_id', 'available_time')
 
 
 
