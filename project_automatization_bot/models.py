@@ -22,6 +22,7 @@ class Team(models.Model):
 
 
 class Student(models.Model):
+    WEEK_CHOICES = [('Третья', 3), ('Четвертая', 4)]
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний ID ученика',
         unique=True
@@ -40,6 +41,11 @@ class Student(models.Model):
     )
     start_time_call = models.TimeField(verbose_name='Время начала созвона')
     end_time_call = models.TimeField(verbose_name='Время окончания созвона')
+    week = models.PositiveIntegerField(
+        verbose_name='Выбранная неделя занятий',
+        choices=WEEK_CHOICES,
+        null=True
+    )
     is_far_east = models.BooleanField(verbose_name='Дальний Восток')
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     def __str__(self):
