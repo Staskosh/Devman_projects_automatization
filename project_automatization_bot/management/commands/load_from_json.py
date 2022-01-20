@@ -25,7 +25,6 @@ class Command(BaseCommand):
                     }
                 )
                 product_manager[0].name = pm[chat_id]['name']
-                # product_manager[0].external_id = chat_id
                 product_manager[0].tg_chat_id = chat_id
                 product_manager[0].available_time = pm[chat_id]['available_time']
                 product_manager[0].save()
@@ -46,7 +45,6 @@ class Command(BaseCommand):
                     }
                 )
                 student[0].name = students[chat_id]['name']
-                # student[0].external_id = chat_id
                 student[0].tg_chat_id = chat_id
                 student[0].start_time_call = students[chat_id]['available_time']
                 student[0].status = students[chat_id]['level']

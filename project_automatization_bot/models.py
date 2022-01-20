@@ -23,10 +23,7 @@ class Team(models.Model):
 
 class Student(models.Model):
     WEEK_CHOICES = [('Третья', 3), ('Четвертая', 4)]
-    # external_id = models.PositiveIntegerField(
-    #     verbose_name='Внешний ID ученика',
-    #     unique=True
-    # )
+    
     name = models.CharField(
         max_length=256,
         verbose_name='Имя и фамилия студента'
@@ -40,7 +37,6 @@ class Student(models.Model):
         verbose_name='Статус ученика (джун, новичок+, новичок,)'
     )
     start_time_call = models.JSONField(verbose_name='Время начала созвона')
-    # end_time_call = models.TimeField(verbose_name='Время окончания созвона')
     week = models.PositiveIntegerField(
         verbose_name='Выбранная неделя занятий',
         choices=WEEK_CHOICES,
@@ -57,10 +53,6 @@ class Student(models.Model):
 
 
 class Project_manager(models.Model):
-    # external_id = models.PositiveIntegerField(
-    #     verbose_name='Внешний ID ПМ',
-    #     unique=True,
-    # )
     name = models.CharField(
         max_length=256,
         verbose_name='Имя и фамилия ПМ'
@@ -95,4 +87,3 @@ class Student_distribution(models.Model):
 
     class Meta:
         verbose_name = 'Провести распределение в команды'
-# Create your models here.
