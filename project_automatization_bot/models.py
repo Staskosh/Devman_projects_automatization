@@ -43,8 +43,8 @@ class Team(models.Model):
 
 
 class Student(models.Model):
-    WEEK_CHOICES = [('Третья', 3), ('Четвертая', 4)]
-    
+    WEEK_CHOICES = [('3', '3'), ('4', '4')]
+
     name = models.CharField(
         max_length=256,
         verbose_name='Имя и фамилия студента'
@@ -57,9 +57,18 @@ class Student(models.Model):
         max_length=256,
         verbose_name='Статус ученика (джун, новичок+, новичок,)'
     )
-    start_time_call = models.JSONField(verbose_name='Время начала созвона')
-    week = models.PositiveIntegerField(
+    start_time_call = models.TimeField(
+        verbose_name='Удобное время начала созвона',
+        null=True
+    )
+    end_time_call = models.TimeField(
+        verbose_name='Удобное время конца созвона',
+        null=True
+    )
+    time_call = models.JSONField('JSON формат времени', null=True)
+    week = models.CharField(
         verbose_name='Выбранная неделя занятий',
+        max_length=1,
         choices=WEEK_CHOICES,
         null=True
     )

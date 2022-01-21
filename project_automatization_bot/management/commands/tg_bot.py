@@ -1,9 +1,11 @@
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
+from django.core.exceptions import ObjectDoesNotExist
 from telegram.ext import Updater
 import logging
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
+from project_automatization_bot.models import Student
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -20,31 +22,68 @@ class Command(BaseCommand):
             raise CommandError(exc)
 
 
-WEEK, CALLTIME = range(2)
+WEEK, START_CALL_TIME, END_CALL_TIME = range(3)
 
 
 def start(update: Update, context: CallbackContext):
-    reply_keyboard = [['3', '4']]
+    chat_id = update.message.chat_id
+    try:
+        student = Student.objects.get(tg_chat_id=chat_id)
+    except ObjectDoesNotExist:
+        context.bot.send_message(
+            chat_id=chat_id,
+            text=f'Вы не найдены в списке студентов :( '
+            f'Обратитесь к администратору.\nВаш id {chat_id}'
+        )
+        return ConversationHandler.END
+
+    context.user_data['student'] = student
+
     update.message.reply_text(
-        'Привет! Я бот-распределитель.\nУкажи пожалуйста в какую неделю тебе удобно работать на проектом?',
+        'Привет! Я бот-распределитель.'
+        '\nУкажи пожалуйста в какую неделю месяца тебе удобно работать над проектом?',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            keyboard=[['3', '4']], one_time_keyboard=True, resize_keyboard=True
         ),
     )
     return WEEK
 
 
 def week(update: Update, context: CallbackContext):
-    user = update.message.from_user
-    logger.info(f'{user.first_name} selected week №{update.message.text}') #Здесь нужна запись в БД
-    '''Доступные временные промежутки должны браться исходя из заполненных команд'''
-    reply_keyboard = [['18:00-18:30', '18:30-19:00', '19:00-19:30', '19:30-20:00', '20:30-21:00', '21:30-22:00']]
+    student = context.user_data['student']
+    selected_week = update.message.text
+    student.week = selected_week
+    student.save()
+
+    reply_keyboard = [['18:00', '18:30', '19:30', '20:00', '21:00', '22:00']]
     update.message.reply_text(
-        'В какое время удобно созваниваться?.',
+        'Укажи удобный интервал времени для созвона.\nВремя начала: ',
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True, resize_keyboard=True
-        ),
+        )
     )
+    return START_CALL_TIME
+
+
+def start_call_time(update: Update, context: CallbackContext):
+    student = context.user_data['student']
+    student.start_time_call = update.message.text
+    student.save()
+
+    reply_keyboard = [['18:00', '18:30', '19:30', '20:00', '21:00', '22:00']]
+    update.message.reply_text(
+        'Время завершения: ',
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+        )
+    )
+    return END_CALL_TIME
+
+
+def end_call_time(update: Update, context: CallbackContext):
+    student = context.user_data['student']
+    student.end_time_call = update.message.text
+    student.save()
     return ConversationHandler.END
 
 
@@ -65,7 +104,9 @@ def main():
     conversation_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            WEEK: [MessageHandler(Filters.regex('\d'), week)]
+            WEEK: [MessageHandler(Filters.regex('[1-4]'), week)],
+            START_CALL_TIME: [MessageHandler(Filters.regex('^(([0,1][0-9])|(2[0-3])):[0-5][0-9]$'), start_call_time)],
+            END_CALL_TIME: [MessageHandler(Filters.regex('^(([0,1][0-9])|(2[0-3])):[0-5][0-9]$'), end_call_time)]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
