@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 from pprint import pprint
-from collections import OrderedDict
 
 from project_automatization_bot.models import (
     Project_manager,
@@ -60,4 +59,62 @@ class Command(BaseCommand):
                         students[student.tg_chat_id] += 1
             return sorted(students.items(), key=lambda x: x[1])
         
-        pprint(sort_students_by_available_time(time_windows))
+        sorted_students = sort_students_by_available_time(time_windows)
+        # pprint(sorted_students)
+
+        def create_temp_teams():
+            teams = dict()
+            for team in Team.objects.all():
+                teams[team.external_id] = dict()
+                teams[team.external_id]['start_time'] = team.start_time_call.strftime(
+                    '%H:%M'
+                )
+                teams[team.external_id]['manager'] = team.manager.name
+            return teams
+        
+        def add_student_to_temp_team(teams, student, formed_teams, time):
+            for team_id in teams:
+                if teams[team_id]['start_time'] == time:
+                    if teams[team_id].get('level') is None:
+                        teams[team_id]['first'] = student.tg_chat_id
+                        teams[team_id]['level'] = student.status
+                        break
+                    else:
+                        if (teams[team_id]['level'] != student.status
+                                and (teams[team_id]['level'] == 'junior'
+                                or student.status == 'junior')):
+                            continue
+                        else:
+                            if teams[team_id].get('second') is None:
+                                teams[team_id]['second'] = student.tg_chat_id
+                                break
+                            else:
+                                teams[team_id]['third'] = student.tg_chat_id
+                                formed_teams[team_id] = teams.pop(team_id)
+                                break
+
+        def form_teams(sorted_students):
+            out_of_project = list()
+            teams = create_temp_teams()
+            formed_teams = dict()
+
+            for student in sorted_students:
+                chat_id = student[0]
+                time_windows_count = student[1]
+                if not time_windows_count:
+                    out_of_project.append(student)
+                if time_windows_count == 1:
+                    selected_student = Student.objects.get(tg_chat_id=chat_id)
+                    for time in selected_student.start_time_call:
+                        if selected_student.start_time_call[time]:
+                            add_student_to_temp_team(
+                                teams=teams,
+                                student=selected_student,
+                                formed_teams=formed_teams,
+                                time=time
+                            )
+            return out_of_project, teams, formed_teams
+        
+        pprint(form_teams(sorted_students))
+
+
