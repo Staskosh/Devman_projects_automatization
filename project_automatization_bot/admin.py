@@ -19,7 +19,7 @@ class Project_managerAdmin(admin.ModelAdmin):
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
         'external_id', 'name',
-        'start_time_call', 'end_time_call'
+        'start_time_call'
     )
 
 @admin.register(Project)

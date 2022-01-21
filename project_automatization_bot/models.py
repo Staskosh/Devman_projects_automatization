@@ -1,6 +1,26 @@
 from django.db import models
 
 
+
+class Project_manager(models.Model):
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Имя и фамилия ПМ'
+    )
+    tg_chat_id = models.PositiveIntegerField(
+        verbose_name='Чат id ПМ в Телеграм',
+        unique=True
+    )
+    available_time = models.JSONField(verbose_name='Время cозвонов')
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Проект менеджер'
+        verbose_name_plural = 'Проект менеджеры'
+
+
 class Team(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний ID команды',
@@ -11,7 +31,8 @@ class Team(models.Model):
         verbose_name='Имя команды'
     )
     start_time_call = models.TimeField(verbose_name='Время начала созвонов')
-    end_time_call = models.TimeField(verbose_name='Время окончания созвона')
+    manager = models.ForeignKey(Project_manager, on_delete=models.CASCADE, null=True)
+    # end_time_call = models.TimeField(verbose_name='Время окончания созвона')
 
     def __str__(self):
         return f'{self.name}'
@@ -43,32 +64,13 @@ class Student(models.Model):
         null=True
     )
     is_far_east = models.BooleanField(verbose_name='Дальний Восток')
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True)
+    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING ,null=True)
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
         verbose_name = 'Ученик'
         verbose_name_plural = 'Ученики'
-
-
-class Project_manager(models.Model):
-    name = models.CharField(
-        max_length=256,
-        verbose_name='Имя и фамилия ПМ'
-    )
-    tg_chat_id = models.PositiveIntegerField(
-        verbose_name='Чат id ПМ в Телеграм',
-        unique=True
-    )
-    available_time = models.JSONField(verbose_name='Время cозвонов')
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        verbose_name = 'Проект менеджер'
-        verbose_name_plural = 'Проект менеджеры'
 
 
 class Project(models.Model):
