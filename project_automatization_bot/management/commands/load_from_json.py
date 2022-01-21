@@ -39,14 +39,14 @@ class Command(BaseCommand):
                     defaults={
                         'name': students[chat_id]['name'],
                         'tg_chat_id': chat_id,
-                        'start_time_call': students[chat_id]['available_time'],
+                        'time_call': students[chat_id]['available_time'],
                         'status': students[chat_id]['level'],
                         'is_far_east': students[chat_id]['is_far_east']
                     }
                 )
                 student[0].name = students[chat_id]['name']
                 student[0].tg_chat_id = chat_id
-                student[0].start_time_call = students[chat_id]['available_time']
+                student[0].time_call = students[chat_id]['available_time']
                 student[0].status = students[chat_id]['level']
                 student[0].is_far_east = students[chat_id]['is_far_east']
                 student[0].save()

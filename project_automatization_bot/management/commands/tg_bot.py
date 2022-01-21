@@ -84,6 +84,11 @@ def end_call_time(update: Update, context: CallbackContext):
     student = context.user_data['student']
     student.end_time_call = update.message.text
     student.save()
+
+    context.bot.send_message(
+        chat_id=update.message.chat_id,
+        text='Учел твои пожелания. Жди уведомление о распределении в команду. Удачи!'
+    )
     return ConversationHandler.END
 
 
@@ -92,7 +97,7 @@ def cancel(update: Update, context: CallbackContext):
     user = update.message.from_user
     logger.info("User %s canceled the conversation.", user.first_name)
     update.message.reply_text(
-        'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
+        'Пока!', reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
 
