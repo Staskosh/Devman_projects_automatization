@@ -42,7 +42,7 @@ class Command(BaseCommand):
                         Team.objects.create(
                             external_id=f'{time[:2]}{time[3:]}{tg_chat_id}',
                             name=f'{time} {project_manager.name}',
-                            time_call=time,
+                            start_time_call=time,
                             manager=project_manager
                         )
 
@@ -51,11 +51,11 @@ class Command(BaseCommand):
         def sort_students_by_available_time(time_windows):
             students = dict()
             for student in Student.objects.all():
-                # student_time_windows = student.time_call
+                # student_time_windows = student.start_time_call
                 # students[student.tg_chat_id]['time_windows'] = student_time_windows
                 students[student.tg_chat_id]= 0
                 for time in time_windows:
-                    if student.time_call[time]:
+                    if student.start_time_call[time]:
                         students[student.tg_chat_id] += 1
             return sorted(students.items(), key=lambda x: x[1])
         
@@ -78,6 +78,7 @@ class Command(BaseCommand):
                     if teams[team_id].get('level') is None:
                         teams[team_id]['first'] = student.tg_chat_id
                         teams[team_id]['level'] = student.status
+                        print('add first')
                         break
                     else:
                         if (teams[team_id]['level'] != student.status
@@ -87,12 +88,18 @@ class Command(BaseCommand):
                         else:
                             if teams[team_id].get('second') is None:
                                 teams[team_id]['second'] = student.tg_chat_id
+                                print('add second')
                                 break
-                            else:
+                            elif teams[team_id].get('third') is None:
                                 teams[team_id]['third'] = student.tg_chat_id
                                 formed_teams[team_id] = teams.pop(team_id)
                                 time_windows[time] -= 1
+                                print('add third')
+                                print(f'Оставшиеся окна: {time_windows}')
                                 break
+                            else:
+                                print('go next team')
+                                continue
 
         def form_teams(sorted_students, time_windows):
             out_of_project = list()
@@ -101,13 +108,15 @@ class Command(BaseCommand):
 
             for student in sorted_students:
                 chat_id = student[0]
+                print(f'select student {chat_id}')
                 time_windows_count = student[1]
                 selected_student = Student.objects.get(tg_chat_id=chat_id)
                 if not time_windows_count:
                     out_of_project.append(student)
+                    print(f'student {selected_student.tg_chat_id} was added to out')
                 elif time_windows_count == 1:
-                    for time in selected_student.time_call:
-                        if selected_student.time_call[time]:
+                    for time in selected_student.start_time_call:
+                        if selected_student.start_time_call[time]:
                             add_student_to_temp_team(
                                 teams=teams,
                                 student=selected_student,
@@ -115,10 +124,12 @@ class Command(BaseCommand):
                                 time=time,
                                 time_windows=time_windows
                             )
+                            print(f'student {selected_student.tg_chat_id} was added to new team')
                 else:
-                    for time in selected_student.time_call:
+                    for time in selected_student.start_time_call:
                         if (time_windows.get(time) is not None
-                                and selected_student.time_call[time]):
+                                and time_windows.get(time)
+                                and selected_student.start_time_call[time]):
                             add_student_to_temp_team(
                                 teams=teams,
                                 student=selected_student,
@@ -126,6 +137,7 @@ class Command(BaseCommand):
                                 time=time,
                                 time_windows=time_windows
                             )
+                            print(f'student {selected_student.tg_chat_id} was added to team')
                             break
 
             return out_of_project, teams, formed_teams
