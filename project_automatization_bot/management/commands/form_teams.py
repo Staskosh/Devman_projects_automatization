@@ -72,7 +72,7 @@ class Command(BaseCommand):
                 teams[team.external_id]['manager'] = team.manager.name
             return teams
         
-        def add_student_to_temp_team(teams, student, formed_teams, time):
+        def add_student_to_temp_team(teams, student, formed_teams, time, time_windows):
             for team_id in teams:
                 if teams[team_id]['start_time'] == time:
                     if teams[team_id].get('level') is None:
@@ -91,9 +91,10 @@ class Command(BaseCommand):
                             else:
                                 teams[team_id]['third'] = student.tg_chat_id
                                 formed_teams[team_id] = teams.pop(team_id)
+                                time_windows[time] -= 1
                                 break
 
-        def form_teams(sorted_students):
+        def form_teams(sorted_students, time_windows):
             out_of_project = list()
             teams = create_temp_teams()
             formed_teams = dict()
@@ -101,20 +102,34 @@ class Command(BaseCommand):
             for student in sorted_students:
                 chat_id = student[0]
                 time_windows_count = student[1]
+                selected_student = Student.objects.get(tg_chat_id=chat_id)
                 if not time_windows_count:
                     out_of_project.append(student)
-                if time_windows_count == 1:
-                    selected_student = Student.objects.get(tg_chat_id=chat_id)
+                elif time_windows_count == 1:
                     for time in selected_student.start_time_call:
                         if selected_student.start_time_call[time]:
                             add_student_to_temp_team(
                                 teams=teams,
                                 student=selected_student,
                                 formed_teams=formed_teams,
-                                time=time
+                                time=time,
+                                time_windows=time_windows
                             )
+                else:
+                    for time in selected_student.start_time_call:
+                        if (time_windows.get(time) is not None
+                                and selected_student.start_time_call[time]):
+                            add_student_to_temp_team(
+                                teams=teams,
+                                student=selected_student,
+                                formed_teams=formed_teams,
+                                time=time,
+                                time_windows=time_windows
+                            )
+                            break
+
             return out_of_project, teams, formed_teams
         
-        pprint(form_teams(sorted_students))
+        pprint(form_teams(sorted_students, time_windows))
 
 
