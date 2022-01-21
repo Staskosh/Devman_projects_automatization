@@ -1,4 +1,6 @@
 from django.core.management.base import BaseCommand
+from pprint import pprint
+from collections import OrderedDict
 
 from project_automatization_bot.models import (
     Project_manager,
@@ -45,4 +47,17 @@ class Command(BaseCommand):
                             manager=project_manager
                         )
 
-        create_teams(time_windows)
+        # create_teams(time_windows)
+
+        def sort_students_by_available_time(time_windows):
+            students = dict()
+            for student in Student.objects.all():
+                # student_time_windows = student.start_time_call
+                # students[student.tg_chat_id]['time_windows'] = student_time_windows
+                students[student.tg_chat_id]= 0
+                for time in time_windows:
+                    if student.start_time_call[time]:
+                        students[student.tg_chat_id] += 1
+            return sorted(students.items(), key=lambda x: x[1])
+        
+        pprint(sort_students_by_available_time(time_windows))
