@@ -83,6 +83,7 @@ def start_call_time(update: Update, context: CallbackContext):
 def end_call_time(update: Update, context: CallbackContext):
     student = context.user_data['student']
     student.end_time_call = update.message.text
+    student.time_to_json()
     student.save()
 
     context.bot.send_message(
