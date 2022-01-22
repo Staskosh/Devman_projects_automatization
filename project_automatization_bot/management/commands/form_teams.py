@@ -26,7 +26,7 @@ class Command(BaseCommand):
             return time_windows
 
         time_windows = get_pms_available_time()
-        print(f'Доступные окна: {time_windows}')
+        # print(f'Доступные окна: {time_windows}')
 
         def create_teams(start_time):
             schedule = dict()
@@ -165,9 +165,6 @@ class Command(BaseCommand):
             second_level_priority
         ):
             is_added = 0
-            pprint(first_level_priority)
-            pprint(second_level_priority)
-            print(time)
             if (first_level_priority 
                     and (time in first_level_priority.values())):
                 for team_id in first_level_priority:
@@ -211,7 +208,6 @@ class Command(BaseCommand):
                             pprint(second_level_priority)
                             break
             if not is_added:
-                print('HERE')
                 is_added = handle_distribution(
                     teams=teams,
                     student=student,
