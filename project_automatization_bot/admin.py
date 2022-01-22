@@ -1,17 +1,39 @@
 from django.utils.safestring import mark_safe
 
-from .models import Student, Project_manager, Team, Project, Student_distribution
+from .models import (
+    Student,
+    Project_manager,
+    Team,
+    Project,
+    Student_distribution,
+    IncompleteTeam
+)
 from django.contrib import admin
 #from project_automatization_bot.management.commands.tg_bot import perform_raffle
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'tg_chat_id', 'start_time_call', 'end_time_call', 'is_far_east')
+    list_display = (
+        'id',
+        'name',
+        'tg_chat_id',
+        'start_time_call',
+        'end_time_call',
+        'is_far_east',
+        'is_out_of_project'
+    )
 
 @admin.register(Project_manager)
 class Project_managerAdmin(admin.ModelAdmin):
     list_display = ('name', 'tg_chat_id', 'available_time')
 
+
+@admin.register(IncompleteTeam)
+class IncompleteTeamAdmin(admin.ModelAdmin):
+    list_display = (
+        'external_id', 'name',
+        'start_time_call'
+    )
 
 
 @admin.register(Team)

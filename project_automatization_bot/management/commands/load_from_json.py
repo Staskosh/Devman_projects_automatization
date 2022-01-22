@@ -41,7 +41,8 @@ class Command(BaseCommand):
                         'tg_chat_id': chat_id,
                         'time_call': students[chat_id]['available_time'],
                         'status': students[chat_id]['level'],
-                        'is_far_east': students[chat_id]['is_far_east']
+                        'is_far_east': students[chat_id]['is_far_east'],
+                        'is_out_of_project': students[chat_id]['is_out_of_project']
                     }
                 )
                 student[0].name = students[chat_id]['name']
@@ -49,6 +50,7 @@ class Command(BaseCommand):
                 student[0].time_call = students[chat_id]['available_time']
                 student[0].status = students[chat_id]['level']
                 student[0].is_far_east = students[chat_id]['is_far_east']
+                student[0].is_out_of_project = students[chat_id]['is_out_of_project']
                 student[0].save()
         
         update_students(students_filepath)

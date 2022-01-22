@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from pprint import pprint
 
 from project_automatization_bot.models import (
+    IncompleteTeam,
     Project_manager,
     Student,
     Team
@@ -43,7 +44,7 @@ class Command(BaseCommand):
                         external_id = f'{time[:2]}{time[3:]}{tg_chat_id}'
                         teams[external_id] = dict()
                         teams[external_id]['start_time'] = time
-                        teams[external_id]['manager'] = project_manager.name
+                        teams[external_id]['manager'] = project_manager.tg_chat_id
             return teams
 
         def sort_students_by_available_time(time_windows):
@@ -273,3 +274,75 @@ class Command(BaseCommand):
         pprint(teams[1])
         print('Сформированные команды:')
         pprint(teams[2])
+
+        def save_formed_teams(formed_teams):
+            for team_id in formed_teams:
+                time = formed_teams[team_id]['start_time']
+                project_manager = Project_manager.objects.get(
+                    tg_chat_id=formed_teams[team_id]['manager']
+                )
+                new_team = Team.objects.create(
+                    external_id=team_id,
+                    name=f'{time} {project_manager.name}',
+                    start_time_call=time,
+                    manager=project_manager
+                )
+                first_student = Student.objects.get(
+                    tg_chat_id = formed_teams[team_id]['first']
+                )
+                first_student.team = new_team
+                first_student.is_out_of_project = False
+                first_student.save()
+                second_student = Student.objects.get(
+                    tg_chat_id = formed_teams[team_id]['second']
+                )
+                second_student.team = new_team
+                second_student.is_out_of_project = False
+                second_student.save()
+                third_student = Student.objects.get(
+                    tg_chat_id = formed_teams[team_id]['third']
+                )
+                third_student.team = new_team
+                third_student.is_out_of_project = False
+                third_student.save()
+        
+        save_formed_teams(teams[2])
+
+        def set_out_of_project_status(students):
+            for tg_chat_id in students:
+                student = Student.objects.get(
+                    tg_chat_id=tg_chat_id[0]
+                )
+                student.is_out_of_project = True
+                student.save()
+        
+        set_out_of_project_status(teams[0])
+
+        def save_incomplete_teams(incomplete_teams):
+            for team_id in incomplete_teams:
+                if 'first' in incomplete_teams[team_id]:
+                    time = incomplete_teams[team_id]['start_time']
+                    project_manager = Project_manager.objects.get(
+                        tg_chat_id=incomplete_teams[team_id]['manager']
+                    )
+                    new_team = IncompleteTeam.objects.create(
+                        external_id=team_id,
+                        name=f'{time} {project_manager.name}',
+                        start_time_call=time,
+                        manager=project_manager
+                    )
+                    first_student = Student.objects.get(
+                        tg_chat_id = incomplete_teams[team_id]['first']
+                    )
+                    first_student.incomplete_team = new_team
+                    first_student.is_out_of_project = False
+                    first_student.save()
+                    if 'second' in incomplete_teams[team_id]:
+                        second_student = Student.objects.get(
+                            tg_chat_id = incomplete_teams[team_id]['second']
+                        )
+                        second_student.incomplete_team = new_team
+                        second_student.is_out_of_project = False
+                        second_student.save()
+        
+        save_incomplete_teams(teams[1])

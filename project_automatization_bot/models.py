@@ -41,6 +41,27 @@ class Team(models.Model):
         verbose_name_plural = 'Команды'
 
 
+class IncompleteTeam(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний ID команды',
+        unique=True
+    )
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Имя команды'
+    )
+    start_time_call = models.TimeField(verbose_name='Время начала созвонов')
+    manager = models.ForeignKey(Project_manager, on_delete=models.CASCADE, null=True)
+    # end_time_call = models.TimeField(verbose_name='Время окончания созвона')
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Неполная команда'
+        verbose_name_plural = 'Неполные команды'
+
+
 class Student(models.Model):
     WEEK_CHOICES = [('3', '3'), ('4', '4')]
 
@@ -72,7 +93,15 @@ class Student(models.Model):
         null=True
     )
     is_far_east = models.BooleanField(verbose_name='Дальний Восток')
-    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING ,null=True)
+    is_out_of_project = models.BooleanField(
+        verbose_name='Без созвонов с ПМ'
+    )
+    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING, null=True)
+    incomplete_team = models.ForeignKey(
+        IncompleteTeam,
+        on_delete=models.DO_NOTHING,
+        null=True
+    )
 
     def time_to_json(self):
         times = ["08:00","08:30","09:00","09:30","10:00",
