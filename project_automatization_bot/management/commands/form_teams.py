@@ -58,7 +58,15 @@ class Command(BaseCommand):
         sorted_students = sort_students_by_available_time(time_windows)
         # pprint(sorted_students)
         
-        def add_student_to_temp_team(teams, student, formed_teams, time, time_windows):
+        def add_student_to_temp_team(
+                teams,
+                student,
+                formed_teams,
+                time,
+                time_windows,
+                # first_level_priority,
+                # second_level_priority
+            ):
             for team_id in teams:
                 if teams[team_id]['start_time'] == time:
                     if teams[team_id].get('level') is None:
@@ -76,20 +84,19 @@ class Command(BaseCommand):
                                 teams[team_id]['second'] = student.tg_chat_id
                                 print('add second')
                                 break
-                            elif teams[team_id].get('third') is None:
+                            else:
                                 teams[team_id]['third'] = student.tg_chat_id
                                 formed_teams[team_id] = teams.pop(team_id)
                                 time_windows[time] -= 1
                                 print('add third')
                                 print(f'Оставшиеся окна: {time_windows}')
                                 break
-                            else:
-                                print('go next team')
-                                continue
 
         def form_teams(sorted_students, time_windows):
             out_of_project = list()
             teams = create_teams(time_windows)
+            first_level_priority_teams = dict()
+            second_level_priority_teams = dict()
             formed_teams = dict()
 
             for student in sorted_students:
@@ -108,7 +115,7 @@ class Command(BaseCommand):
                                 student=selected_student,
                                 formed_teams=formed_teams,
                                 time=time,
-                                time_windows=time_windows
+                                time_windows=time_windows,
                             )
                             print(f'student {selected_student.tg_chat_id} was added to new team')
                 else:
@@ -121,7 +128,9 @@ class Command(BaseCommand):
                                 student=selected_student,
                                 formed_teams=formed_teams,
                                 time=time,
-                                time_windows=time_windows
+                                time_windows=time_windows,
+                                # first_level_priority=first_level_priority_teams,
+                                # second_level_priority=second_level_priority_teams
                             )
                             print(f'student {selected_student.tg_chat_id} was added to team')
                             break
