@@ -129,10 +129,9 @@ class Command(BaseCommand):
             return out_of_project, teams, formed_teams
         
         teams = form_teams(sorted_students, time_windows)
-        pprint(
-            f'Без созвонов с ПМ: {teams[0]}'
-            f'Неполные команды: {teams[1]}'
-            f'Сформированные команды: {teams[2]}'
-        )
-
-
+        print('Без созвонов с ПМ:')
+        pprint(teams[0])
+        print('Неполные команды:')
+        pprint(teams[1])
+        print('Сформированные команды:')
+        pprint(teams[2])
