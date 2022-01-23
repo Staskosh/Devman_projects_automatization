@@ -33,7 +33,11 @@ class Team(models.Model):
         verbose_name='Имя команды'
     )
     start_time_call = models.TimeField(verbose_name='Время начала созвонов')
-    manager = models.ForeignKey(Project_manager, on_delete=models.CASCADE, null=True)
+    manager = models.ForeignKey(
+        Project_manager,
+        on_delete=models.CASCADE,
+        null=True
+    )
     # end_time_call = models.TimeField(verbose_name='Время окончания созвона')
 
     def __str__(self):
@@ -54,7 +58,11 @@ class IncompleteTeam(models.Model):
         verbose_name='Имя команды'
     )
     start_time_call = models.TimeField(verbose_name='Время начала созвонов')
-    manager = models.ForeignKey(Project_manager, on_delete=models.CASCADE, null=True)
+    manager = models.ForeignKey(
+        Project_manager,
+        on_delete=models.CASCADE,
+        null=True
+    )
     # end_time_call = models.TimeField(verbose_name='Время окончания созвона')
 
     def __str__(self):
@@ -100,11 +108,17 @@ class Student(models.Model):
         verbose_name='Без созвонов с ПМ',
         default=False
     )
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True)
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        db_constraint=False
+    )
     incomplete_team = models.ForeignKey(
         IncompleteTeam,
-        on_delete=models.CASCADE,
-        null=True
+        on_delete=models.DO_NOTHING,
+        null=True,
+        db_constraint=False
     )
 
     def time_to_json(self):
@@ -133,7 +147,10 @@ class Student(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=256)
-    project_manager = models.ForeignKey(Project_manager, on_delete=models.CASCADE)
+    project_manager = models.ForeignKey(
+        Project_manager,
+        on_delete=models.CASCADE
+    )
     students = models.JSONField()
     teams = models.ManyToManyField(Team)
 
@@ -146,7 +163,8 @@ class Student_distribution(models.Model):
     Student_distribution = models.CharField(max_length=256)
 
     def activate_button(self):
-        return format_html('<a href="{}" class="button">Distribution</a>',
+        return format_html(
+            '<a href="{}" class="button">Distribution</a>',
             reverse_lazy("admin:admin_make_distribution", args=[self.pk])
         )
     
