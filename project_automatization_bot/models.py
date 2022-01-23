@@ -1,5 +1,8 @@
 from django.db import models
+from django.utils.html import format_html
+from django.urls import reverse_lazy
 from datetime import datetime
+
 
 class Project_manager(models.Model):
     name = models.CharField(
@@ -96,10 +99,10 @@ class Student(models.Model):
     is_out_of_project = models.BooleanField(
         verbose_name='Без созвонов с ПМ'
     )
-    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING, null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True)
     incomplete_team = models.ForeignKey(
         IncompleteTeam,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         null=True
     )
 
@@ -141,5 +144,11 @@ class Project(models.Model):
 class Student_distribution(models.Model):
     Student_distribution = models.CharField(max_length=256)
 
+    def activate_button(self):
+        return format_html('<a href="{}" class="button">Distribution</a>',
+            reverse_lazy("admin:admin_make_distribution", args=[self.pk])
+        )
+    
     class Meta:
-        verbose_name = 'Провести распределение в команды'
+        verbose_name = 'Провести распределение в команду'
+        verbose_name_plural = 'Провести распределение в команды'
