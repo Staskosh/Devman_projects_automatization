@@ -1,4 +1,6 @@
-from django.utils.safestring import mark_safe
+from django.contrib import admin
+from django.shortcuts import redirect
+from django.urls import path
 
 from .models import (
     Student,
@@ -8,8 +10,8 @@ from .models import (
     Student_distribution,
     IncompleteTeam
 )
-from django.contrib import admin
-#from project_automatization_bot.management.commands.tg_bot import perform_raffle
+from distribution import main
+
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -22,6 +24,7 @@ class StudentAdmin(admin.ModelAdmin):
         'is_far_east',
         'is_out_of_project'
     )
+
 
 @admin.register(Project_manager)
 class Project_managerAdmin(admin.ModelAdmin):
@@ -43,17 +46,28 @@ class TeamAdmin(admin.ModelAdmin):
         'start_time_call'
     )
 
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'project_manager', 'students')
 
 
-
 @admin.register(Student_distribution)
 class Student_distributionAdmin(admin.ModelAdmin):
-    list_display = ('Student_distribution',)
+    list_display = ('activate_button',)
 
-    def raffles(self, obj):
-        #perform_raffle()
-        return mark_safe( f'<a role="button"><button class="btn btn-primary"> Группировка </button></a>' )
-# Register your models here.
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                '<int:pk>/',
+                self.make_distribution,
+                name='admin_make_distribution'
+            )
+        ]
+        return my_urls + urls
+
+    def make_distribution(self, request, pk):
+        main()
+        self.message_user(request, "Распределение произведено")
+        return redirect("../../team/")
