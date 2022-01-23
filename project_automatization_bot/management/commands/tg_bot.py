@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
-from telegram.ext import Updater
 import logging
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
-from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler, Updater
 from project_automatization_bot.models import Student
 import datetime
 
@@ -19,7 +18,7 @@ class Command(BaseCommand):
 
 WEEK, START_CALL_TIME, END_CALL_TIME = range(3)
 BUTTONS_IN_ROW = 4
-ROWS = 5
+ROWS = 4
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -119,7 +118,7 @@ def start_call_time(update: Update, context: CallbackContext):
     update.message.reply_text(
         'Время завершения созвона: ',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            reply_keyboard[:ROWS], one_time_keyboard=True, resize_keyboard=True
         )
     )
     return END_CALL_TIME
@@ -127,7 +126,7 @@ def start_call_time(update: Update, context: CallbackContext):
 
 def end_call_time(update: Update, context: CallbackContext):
     reply = update.message.text
-    reply_keyboard = context.user_data['keyboard']
+    reply_keyboard = generate_reply_keyboard(end_time='21:30')
     slice_index = context.user_data['slice_index']
     if reply == 'Далее ➡':
         context.bot.send_message(
@@ -159,8 +158,8 @@ def end_call_time(update: Update, context: CallbackContext):
         context.bot.send_message(
             chat_id=update.message.chat_id,
             text='Укажи пожалуйста корректно время звершения звонка:',
-            reply_markup = ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard[:ROWS], one_time_keyboard=True, resize_keyboard=True
             )
         )
         context.user_data['slice_index'] = ROWS
