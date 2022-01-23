@@ -94,7 +94,8 @@ class Student(models.Model):
     )
     is_far_east = models.BooleanField(verbose_name='Дальний Восток')
     is_out_of_project = models.BooleanField(
-        verbose_name='Без созвонов с ПМ'
+        verbose_name='Без созвонов с ПМ',
+        default=False
     )
     team = models.ForeignKey(Team, on_delete=models.DO_NOTHING, null=True)
     incomplete_team = models.ForeignKey(
@@ -116,7 +117,7 @@ class Student(models.Model):
                 time: 1 if (to_dateime(self.start_time_call) <= to_dateime(time) < to_dateime(self.end_time_call))
                 else 0 for time in times
             }
-        self.time_call = json_times
+            self.time_call = json_times
 
 
     def __str__(self):
