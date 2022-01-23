@@ -3,15 +3,10 @@ from django.core.management import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from telegram.ext import Updater
 import logging
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
 from project_automatization_bot.models import Student
-
-
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
-
-logger = logging.getLogger(__name__)
+import datetime
 
 
 class Command(BaseCommand):
@@ -23,6 +18,26 @@ class Command(BaseCommand):
 
 
 WEEK, START_CALL_TIME, END_CALL_TIME = range(3)
+BUTTONS_IN_ROW = 4
+ROWS = 5
+
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def generate_reply_keyboard(start_time='08:00', end_time='21:00', period=30):
+    start_time = datetime.datetime.strptime(start_time,'%H:%M')
+    end_time = datetime.datetime.strptime(end_time,'%H:%M')
+    delta = datetime.timedelta(minutes=period)
+    time_list = [(start_time+delta*multiper).strftime('%H:%M') for multiper in range(int((end_time-start_time)/delta))]
+    button_lists = [time_list[x:x+BUTTONS_IN_ROW] for x in range(0, len(time_list), BUTTONS_IN_ROW)]
+    for input_index in range(2*(ROWS-1), len(button_lists), ROWS):
+        button_lists.insert(input_index, ['⬅ Назад', 'Далее ➡'])
+    button_lists.insert(ROWS-1, ['Далее ➡'])
+    button_lists.insert(len(button_lists), ['⬅ Назад'])
+    return button_lists
 
 
 def start(update: Update, context: CallbackContext):
@@ -55,24 +70,54 @@ def week(update: Update, context: CallbackContext):
     student.week = selected_week
     student.save()
 
-    reply_keyboard = [['18:00', '18:30', '19:30', '20:00', '21:00', '22:00']]
+    reply_keyboard = generate_reply_keyboard()
+    context.user_data['slice_index'] = ROWS
+    context.user_data['keyboard'] = reply_keyboard
     update.message.reply_text(
         'Укажи удобный интервал времени для созвона.\nВремя начала: ',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            reply_keyboard[:ROWS], one_time_keyboard=True, resize_keyboard=True
         )
     )
     return START_CALL_TIME
 
 
 def start_call_time(update: Update, context: CallbackContext):
+    reply = update.message.text
+    reply_keyboard = context.user_data['keyboard']
+    slice_index = context.user_data['slice_index']
+    if reply == 'Далее ➡':
+        context.bot.send_message(
+            text='👀',
+            chat_id=update.message.chat_id,
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard[slice_index:slice_index+ROWS],
+                one_time_keyboard=True,
+                resize_keyboard=True
+            )
+        )
+        context.user_data['slice_index'] = slice_index + ROWS
+        return START_CALL_TIME
+    if reply == '⬅ Назад':
+        context.bot.send_message(
+            text='👀',
+            chat_id=update.message.chat_id,
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard[slice_index-ROWS*2:slice_index-ROWS],
+                one_time_keyboard=True,
+                resize_keyboard=True
+            )
+        )
+        context.user_data['slice_index'] = slice_index - ROWS
+        return START_CALL_TIME
+
     student = context.user_data['student']
     student.start_time_call = update.message.text
     student.save()
+    context.user_data['slice_index'] = ROWS
 
-    reply_keyboard = [['18:00', '18:30', '19:30', '20:00', '21:00', '22:00']]
     update.message.reply_text(
-        'Время завершения: ',
+        'Время завершения созвона: ',
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True, resize_keyboard=True
         )
@@ -81,7 +126,45 @@ def start_call_time(update: Update, context: CallbackContext):
 
 
 def end_call_time(update: Update, context: CallbackContext):
+    reply = update.message.text
+    reply_keyboard = context.user_data['keyboard']
+    slice_index = context.user_data['slice_index']
+    if reply == 'Далее ➡':
+        context.bot.send_message(
+            text='👀',
+            chat_id=update.message.chat_id,
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard[slice_index:slice_index + ROWS],
+                one_time_keyboard=True,
+                resize_keyboard=True
+            )
+        )
+        context.user_data['slice_index'] = slice_index + ROWS
+        return END_CALL_TIME
+    if reply == '⬅ Назад':
+        context.bot.send_message(
+            text='👀',
+            chat_id=update.message.chat_id,
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard[slice_index - ROWS * 2:slice_index - ROWS],
+                one_time_keyboard=True,
+                resize_keyboard=True
+            )
+        )
+        context.user_data['slice_index'] = slice_index - ROWS
+        return END_CALL_TIME
+
     student = context.user_data['student']
+    if datetime.datetime.strptime(student.start_time_call,'%H:%M') >= datetime.datetime.strptime(update.message.text,'%H:%M'):
+        context.bot.send_message(
+            chat_id=update.message.chat_id,
+            text='Укажи пожалуйста корректно время звершения звонка:',
+            reply_markup = ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            )
+        )
+        context.user_data['slice_index'] = ROWS
+        return END_CALL_TIME
     student.end_time_call = update.message.text
     student.time_to_json()
     student.save()
@@ -94,7 +177,6 @@ def end_call_time(update: Update, context: CallbackContext):
 
 
 def cancel(update: Update, context: CallbackContext):
-    """Cancels and ends the conversation."""
     user = update.message.from_user
     logger.info("User %s canceled the conversation.", user.first_name)
     update.message.reply_text(
@@ -111,8 +193,18 @@ def main():
         entry_points=[CommandHandler('start', start)],
         states={
             WEEK: [MessageHandler(Filters.regex('[1-4]'), week)],
-            START_CALL_TIME: [MessageHandler(Filters.regex('^(([0,1][0-9])|(2[0-3])):[0-5][0-9]$'), start_call_time)],
-            END_CALL_TIME: [MessageHandler(Filters.regex('^(([0,1][0-9])|(2[0-3])):[0-5][0-9]$'), end_call_time)]
+            START_CALL_TIME: [
+                MessageHandler(
+                    Filters.regex('^(([0,1][0-9])|(2[0-3])):[0-5][0-9]$') | Filters.regex('⬅ Назад|Далее ➡'),
+                    start_call_time
+                )
+            ],
+            END_CALL_TIME: [
+                MessageHandler(
+                    Filters.regex('^(([0,1][0-9])|(2[0-3])):[0-5][0-9]$') | Filters.regex('⬅ Назад|Далее ➡'),
+                    end_call_time
+                )
+            ]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
