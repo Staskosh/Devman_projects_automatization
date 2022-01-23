@@ -110,15 +110,17 @@ class Student(models.Model):
     )
     team = models.ForeignKey(
         Team,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
-        db_constraint=False
+        db_constraint=False,
+        blank=True
     )
     incomplete_team = models.ForeignKey(
         IncompleteTeam,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
-        db_constraint=False
+        db_constraint=False,
+        blank=True
     )
 
     def time_to_json(self):
