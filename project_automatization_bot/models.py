@@ -159,17 +159,3 @@ class Project(models.Model):
     class Meta:
         verbose_name = 'Проект'
         verbose_name_plural = 'Проекты'
-
-
-class Student_distribution(models.Model):
-    Student_distribution = models.CharField(max_length=256)
-
-    def activate_button(self):
-        return format_html(
-            '<a href="{}" class="button">Distribution</a>',
-            reverse_lazy("admin:admin_make_distribution", args=[self.pk])
-        )
-    
-    class Meta:
-        verbose_name = 'Провести распределение в команду'
-        verbose_name_plural = 'Провести распределение в команды'
